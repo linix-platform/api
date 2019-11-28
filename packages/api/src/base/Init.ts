@@ -33,7 +33,7 @@ export default abstract class Init<ApiType extends ApiTypes> extends Decorate<Ap
     // We only register the types (global) if this is not a cloned instance.
     // Do right up-front, so we get in the user types before we are actually
     // doing anything on-chain, this ensures we have the overrides in-place
-    if (!options.source && options.types) {
+    if (!options.source) {
       this.registerTypes(options.types);
     }
 
@@ -86,7 +86,7 @@ export default abstract class Init<ApiType extends ApiTypes> extends Decorate<Ap
   }
 
   private async metaFromChain (optMetadata: Record<string, string>): Promise<Metadata> {
-    const { typesChain, typesSpec } = this._options;
+    const { types, typesChain, typesSpec } = this._options;
     const [genesisHash, runtimeVersion, chain, chainProps] = await Promise.all([
       this._rpcCore.chain.getBlockHash(0).toPromise(),
       this._rpcCore.state.getRuntimeVersion().toPromise(),
@@ -96,6 +96,7 @@ export default abstract class Init<ApiType extends ApiTypes> extends Decorate<Ap
 
     // based on the node spec & chain, inject specific type overrides
     this.registerTypes(getChainTypes(chain, runtimeVersion, typesChain, typesSpec));
+    this.registerTypes(types);
 
     // filter the RPC methods (this does an rpc-methods call)
     await this.filterRpc();
